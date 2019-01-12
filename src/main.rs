@@ -1,7 +1,8 @@
 use std::env;
-use std::fs;
 use std::process;
-use std::error::Error;
+
+use mini_grep;
+use mini_grep::Config;
 
 fn main() {
     // Collect the command line arguments the user passed in
@@ -17,46 +18,17 @@ fn main() {
     println!("Searching for {}", config.query);
     println!("In file {}", config.filename);
 
-    run(config);
-}
+    /*
+        Start the run method, if it's return value is of a type that implements the
+        Error interface the closure will run gracefully informing the user the program
+        fell over and exiting with a non zero error code.
 
-fn run(config: Config) {
-    let contents = fs::read_to_string(config.filename)
-        .expect("Something went wrong reading the file");
+        Using an if statement for comparison instead of unwrap_or_else because run
+        will not return a value that we can unwrap
+    */
+    if let Err(e) = mini_grep::run(config) {
+        println!("Application error: {}", e);
 
-    println!("With text:\n{}", contents);
-}
-
-/*
-    A struct for holding the Config values, AFAIK a "struct" in this world
-    is what i'd call an "Object" or "Model" in JS Land
-*/
-struct Config {
-    query: String,
-    filename: String
-}
-
-/*
-    An implementation for the Config struct, Creates a new method on the
-    Struct that we can use as its constructor.
-
-    Instead of returning a Config struct directly we return a Result
-    object which will contain either the created Struct or a string
-    explaining what went wrong.
-
-    This originally called a panic! macro on error but this throws
-    out a lot of extra noise like a stack trace that we don't need for
-    a simple problem like not providing enough arguments.
-*/
-impl Config {
-    fn new(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("Insufficient number of arguments passed");
-        }
-
-        let query = args[1].clone();
-        let filename = args[2].clone();
-
-        Ok(Config { query, filename })
+        process::exit(1);
     }
 }
