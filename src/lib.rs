@@ -52,9 +52,44 @@ pub fn run(config: Config) -> Result<(), Box<dyn Error>> {
     */
     let contents = fs::read_to_string(config.filename)?;
 
-    println!("With text:\n{}", contents);
+    for line in search(&config.query, &contents) {
+        println!("{}", line);
+    }
 
     // We won't have any values to return, so we'll just signal everything is ok
     Ok(())
 }
 
+fn search<'a>(query: &str, contents: &'a str) -> Vec<&'a str> {
+    let mut results = Vec::new();
+
+    for line in contents.lines() {
+        if line.contains(query) {
+            results.push(line);
+        }
+    }
+
+    results
+}
+
+/*
+    A unit test to ensure that stuff we write is working.
+*/
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn one_result() {
+        let query = "duct";
+        let contents = "\
+Rust:
+Safe, fast, productive.
+Pick three.";
+
+        assert_eq!(
+            vec!["Safe, fast, productive."],
+            search(query, contents)
+        );
+    }
+}
